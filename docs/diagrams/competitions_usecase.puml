@@ -1,0 +1,35 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Администратор" as Admin
+actor "Судья" as Judge
+actor "Пользователь" as User
+
+rectangle "Система «Учёт результатов соревнований»" {
+    usecase "Добавить соревнование" as UC1
+    usecase "Зарегистрировать участника" as UC2
+    usecase "Внести результат" as UC3
+    usecase "Рассчитать итоги / места" as UC4
+    usecase "Редактировать результат" as UC5
+    usecase "Просмотреть протокол" as UC6
+    usecase "Сформировать отчёт
+(CSV / JSON)" as UC7
+
+    UC3 ..> UC4 : <<include>>
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC7
+
+Judge --> UC3
+Judge --> UC5
+Judge --> UC4
+
+User --> UC6
+User --> UC7
+
+@enduml
