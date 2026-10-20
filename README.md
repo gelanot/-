@@ -114,4 +114,108 @@ git push -u origin main
 
 ## Автор
 
-Дураков Александр из группы 26-ИВТ-2-2. Лабораторная работа №2 по теме «Документирование программных проектов: GitHub, Markdown и PlantUML».
+Лабораторная работа №2 по теме «Документирование программных проектов: GitHub, Markdown и PlantUML».
+## Лабораторная работа №3. Проектирование и реализация базы данных
+
+### ER-диаграмма
+
+![ER-диаграмма](diagrams/er.png)
+
+Та же диаграмма в Mermaid:
+
+```mermaid
+erDiagram
+    user_roles {
+        INTEGER user_role_id PK
+        TEXT name
+    }
+    users {
+        INTEGER user_id PK
+        TEXT login
+        TEXT password_hash
+        INTEGER user_role FK
+    }
+    judges {
+        INTEGER judge_id PK
+        TEXT full_name
+        TEXT specialization
+        INTEGER user_id FK
+    }
+    sports {
+        INTEGER sport_id PK
+        TEXT name
+    }
+    teams {
+        INTEGER team_id PK
+        TEXT name
+        TEXT city
+    }
+    competitions {
+        INTEGER competition_id PK
+        TEXT name
+        TEXT event_date
+        INTEGER sport_id FK
+    }
+    participants {
+        INTEGER participant_id PK
+        TEXT full_name
+        TEXT category
+        INTEGER team_id FK
+    }
+    registrations {
+        INTEGER registration_id PK
+        INTEGER competition_id FK
+        INTEGER participant_id FK
+        INTEGER start_number
+    }
+    results {
+        INTEGER result_id PK
+        INTEGER registration_id FK
+        INTEGER judge_id FK
+        REAL time_seconds
+        REAL points
+        INTEGER place
+    }
+
+    user_roles ||--o{ users : "has"
+    users ||--o| judges : "is"
+    judges ||--o{ results : "records"
+    sports ||--o{ competitions : "defines"
+    teams |o--o{ participants : "includes"
+    competitions ||--o{ registrations : "contains"
+    participants ||--o{ registrations : "applies"
+    registrations ||--o| results : "gets"
+```
+
+### Таблицы
+
+| Таблица | Назначение |
+|---|---|
+| `user_roles` | Справочник ролей: Administrator, Judge, Viewer |
+| `users` | Учётные записи (логин, хеш пароля, роль) |
+| `judges` | Судьи: ФИО, специализация; связь 1:1 с `users` |
+| `sports` | Виды спорта / дисциплины |
+| `teams` | Команды |
+| `competitions` | Соревнования: название, дата, вид спорта |
+| `participants` | Участники: ФИО, категория, команда |
+| `registrations` | Регистрация участника на соревнование (связь M:N), стартовый номер |
+| `results` | Результат выступления: время, очки, место; связь 1:1 с `registrations` |
+
+### Связи
+
+- 1:N: `user_roles` → `users`, `sports` → `competitions`, `teams` → `participants`, `judges` → `results`.
+- 1:1: `users` → `judges`, `registrations` → `results`.
+- M:N: `competitions` ↔ `participants` через `registrations`.
+
+### Создание базы данных
+
+```bash
+python db/init_db.py
+# или вручную:
+sqlite3 db/competitions.db < db/schema.sql
+sqlite3 db/competitions.db ".tables"
+sqlite3 db/competitions.db "SELECT * FROM results;"
+```
+
+Файл `db/schema.sql` удаляет старые таблицы, создаёт новые (сначала справочники,
+затем зависимые таблицы) и добавляет тестовые записи.
